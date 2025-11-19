@@ -47,3 +47,30 @@ Un usuario inicia sesión, el servidor le entrega un JWT. Ahora cada vez que qui
 * **Rate-limit**: limita cuántas veces alguien puede pedir información al servidor para evitar abusos.
 * **CORS**: controla qué sitios web pueden acceder a tu API.
 * **JWT**: token que identifica al usuario después de iniciar sesión.
+
+
+## Cómo implementamos el JWT en el proyecto
+
+Usamos JWT para manejar la autenticación de manera segura. El proceso funciona así:
+
+1. **El usuario envía email y contraseña** a la ruta `POST /auth/login`.
+2. **Buscamos al usuario en la base de datos** usando Prisma.
+3. **Verificamos la contraseña** comparándola con el hash almacenado usando bcrypt.
+4. Si las credenciales son correctas, **generamos un JWT** que incluye:
+
+   * `sub`: el ID del usuario.
+   * `exp`: un tiempo de expiración.
+   * Firma usando `JWT_SECRET` desde `.env`.
+5. **Devolvemos el token al cliente**, que deberá enviarlo en cada petición a rutas protegidas para validar su identidad.
+
+## Comolo hicimos?:
+
+1. Se instala la librería `jsonwebtoken` para generar y verificar tokens.
+2. En el archivo `.env` se define la variable `JWT_SECRET` utilizada para firmar los tokens.
+3. En la ruta `POST /auth/login` se valida al usuario y se genera un token con:
+
+   * `sub`: ID del usuario autenticado.
+   * Tiempo de expiración definido.
+   * Firma basada en `JWT_SECRET`.
+4. El token generado es enviado al cliente.
+5. El cliente debe incluir el token en el encabezado `Authorization` para acceder a rutas protegidas.
