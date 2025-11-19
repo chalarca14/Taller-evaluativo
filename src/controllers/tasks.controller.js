@@ -1,4 +1,6 @@
-import prisma from "../prismaClient.js"
+
+import { prisma } from "../prismaClient.js"
+
 
 // lista todas las tareas
 
