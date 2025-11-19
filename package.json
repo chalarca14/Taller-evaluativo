@@ -21,6 +21,10 @@
   "homepage": "https://github.com/chalarca14/Taller-evaluativo#readme",
   "dependencies": {
     "dotenv": "^17.2.3",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "prisma": "^6.18.0"
+  },
+  "devDependencies": {
+    "@prisma/client": "^7.0.0"
   }
 }
