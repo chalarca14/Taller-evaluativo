@@ -1,14 +1,14 @@
 
-import { prisma } from "../prismaClient.js"
+import prisma from "../prismaClient.js"
 
 
 // lista todas las tareas
 
-export const getTasks = async (req, res) => {
+export const getTask = async (req, res) => {
     try {
-        const tasks = await prisma.tasks.findMany();
-        res.status(200).json(tasks)
-    } catch (erro) {
+        const task = await prisma.task.findMany();
+        res.status(200).json(task)
+    } catch (error) {
         console.error("Error al obtener lastareas:", error);
         res.status(500).json({
             error: "Error al obtener las tareas . intentalo nuevamente"
@@ -26,7 +26,7 @@ export const createTask = async (req, res) => {
                 error: "el titulo es obligatorio"
             });
         }
-        const tasks = await prisma.tasks.create({
+        const task = await prisma.task.create({
             data: {
                 tittle,
                 usersId,
@@ -34,7 +34,7 @@ export const createTask = async (req, res) => {
                 completed: false
             }
         });
-        res.status(201).json(tasks)
+        res.status(201).json(task)
     } catch (error) {
         console.error("erroral crear la tarea", error);
         res.status(500).json({
@@ -56,7 +56,7 @@ export const updateTask = async (req, res) => {
     }
 
     // Verificar si la tarea existe
-    const existingTask = await prisma.tasks.findUnique({
+    const existingTask = await prisma.task.findUnique({
       where: { id: Number(id) }
     });
 
@@ -66,10 +66,10 @@ export const updateTask = async (req, res) => {
 
     // Actualización de la tarea
 
-    const updatedTask = await prisma.tasks.update({
+    const updatedTask = await prisma.task.update({
       where: { id: Number(id) },
       data: {
-        title: tittle ?? existingTask.title,
+        title: tittle ?? existingTask.tittle,
         description: description ?? existingTask.description,
         completed: completed ?? existingTask.completed
       }
@@ -97,7 +97,7 @@ export const deleteTask = async (req, res) => {
     }
 
     // Verificar si la tarea existe
-    const existingTask = await prisma.tasks.findUnique({
+    const existingTask = await prisma.task.findUnique({
       where: { id: Number(id) }
     });
 
@@ -106,7 +106,7 @@ export const deleteTask = async (req, res) => {
     }
 
     // Eliminar la tarea
-    await prisma.tasks.delete({
+    await prisma.task.delete({
       where: { id: Number(id) }
     });
 
