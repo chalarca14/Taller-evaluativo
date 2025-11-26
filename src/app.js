@@ -1,10 +1,13 @@
 import authRoutes from "./routes/auth.js"
 import express from "express";
-const app = express();
-const PORT = 3000;
 import tasks from "./routes/tasks.js"
 import dotenv from "dotenv"
+
+const app = express();
+const PORT = 3000;
 dotenv.config()
+
+
 
 app.use(express.json());
 
