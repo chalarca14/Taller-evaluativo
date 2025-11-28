@@ -1,55 +1,97 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import prisma  from "../prismaClient.js";
+import prisma from "../prismaClient.js";
 
-const SALT_ROUNDS = Number(process.env.SALT_ROUNDS) || 10;
+const JWT_SECRET = process.env.JWT_SECRET;
 
-export const login = async (req, res) => {
-  const { email, password } = req.body;
-  const users = await prisma.users.findUnique({
-    where: { email },
-  });
-
-  if (!users) {
-    return res.status(401).json({ message: "Credenciales invalidas" });
-  }
-
-  const isValid = await bcrypt.compare(password, users.password);
-
-  if (!isValid) {
-    return res.status(401).json({ message: "Credenciales invalidas" });
-  }
-
-  const token = jwt.sign({ sub: users.id }, process.env.JWT_SECRET, {
-    expiresIn: "h1",
-  });
-
-  res.json({ token });
-};
-
+// -------------------------------------------------------------
+// CONTROLADOR: REGISTRO DE USUARIO (SIGNUP)
+// -------------------------------------------------------------
 export const register = async (req, res) => {
-  const { email, password } = req.body;
   try {
-    if (!email || !password) {
-      return res.status(400).json({ error: "email and password are required" });
-    }
-    const existeusers = await prisma.users.findUnique({
-      where: { email },
+    const { email, password } = req.body;
+    
+    
+    // 1. Verificar si el usuario ya existe
+    const userExists = await prisma.users.findUnique({
+      where: { email }
     });
-    if (existeusers){
-        return res.status(409).json({error: "Email already registered "});
+    console.log("----------------------------");
+
+    if (userExists) {
+      return res.status(400).json({ message: 'El usuario ya existe' });
     }
-    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
-    const users = await prisma.users.create({
-        data: {
-            email,
-            password: hashedPassword,
-        }
+
+    // 2. Hashear la contraseña
+    // bcrypt.hash(contraseña, número_de rondas)
+    const hashedPassword = await bcrypt.hash(password, 10);
+    console.log("----------------------------");
+    
+    // 3. Crear el usuario en la base de datos
+    const newUser = await prisma.users.create({
+      data: {
+        email,
+        password: hashedPassword
+      }
     });
 
-    res.status(201).json({message: "users created", usersId: users.id})
+    // 4. Generar un token JWT para el usuario recién creado
+    const token = jwt.sign(
+      { userId: newUser.id },   // Payload (lo que viaja dentro del token)
+      JWT_SECRET,               // Clave secreta
+      { expiresIn: '1h' }       // Tiempo que dura el token
+    );
+
+    // 5. Devolver usuario + token
+    return res.status(201).json({
+      message: 'Usuario creado correctamente',
+      token
+    });
 
   } catch (error) {
-    res.status(500).json({error: "error creating user"})
+    console.error(error);
+    return res.status(500).json({ message: 'Error en el servidor' });
+  }
+};
+
+// -------------------------------------------------------------
+// CONTROLADOR: INICIO DE SESIÓN (LOGIN)
+// -------------------------------------------------------------
+export const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // 1. Buscar usuario por email
+    const user = await prisma.users.findUnique({
+      where: { email }
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Credenciales inválidas' });
+    }
+
+    // 2. Comparar contraseña ingresada vs contraseña hasheada en BD
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Credenciales inválidas' });
+    }
+
+    // 3. Generar token
+    const token = jwt.sign(
+      { userId: user.id },     // Payload
+      JWT_SECRET,              // Clave secreta
+      { expiresIn: '1h' }      // Tiempo de expiración
+    );
+
+    // 4. Responder con token
+    return res.json({
+      message: 'Inicio de sesión exitoso',
+      token
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Error en el servidor' });
   }
 };
