@@ -4,11 +4,15 @@ import tasks from "./routes/tasks.js"
 import dotenv from "dotenv"
 import cors from "cors"
 import rateLimit from "express-rate-limit";
+import passport from "./config/passport.js";
+
+
 
 const app = express();
 const PORT = 3000;
 dotenv.config()
 
+app.use(passport.initialize());
 app.use(express.json());
 
 app.use(express.json());
